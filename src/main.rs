@@ -1,5 +1,5 @@
 mod handlers;
-use axum::routing::{get, post, Router};
+use axum::routing::{get, post, put, Router};
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
@@ -16,6 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/", get(handlers::health))
         .route("/quotes", post(handlers::create_quote))
         .route("/quotes", get(handlers::read_quotes))
+        .route("/quotes/:id", put(handlers::update_quote))
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
