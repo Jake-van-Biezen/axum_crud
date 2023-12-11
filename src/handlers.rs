@@ -117,3 +117,69 @@ pub async fn delete_quote(
         Err(_) => http::StatusCode::INTERNAL_SERVER_ERROR,
     }
 }
+
+#[sqlx::test(fixtures("quotes"))]
+async fn test_create_quote(pool: PgPool) -> sqlx::Result<()> {
+    let quote = Quote::new("book".to_string(), "quote".to_string());
+    let res = create_quote(
+        extract::State(pool),
+        axum::Json(CreateQuote {
+            book: quote.book.clone(),
+            quote: quote.quote.clone(),
+        }),
+    )
+    .await;
+    assert!(res.is_ok());
+    Ok(())
+}
+
+#[sqlx::test(fixtures("quotes"))]
+async fn test_read_quotes(pool: PgPool) -> sqlx::Result<()> {
+    let res = read_quotes(extract::State(pool)).await;
+    assert!(res.is_ok());
+    let quotes = res.unwrap();
+    assert_eq!(quotes.0.len(), 1);
+    // The result contains one quote with id a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+    assert_eq!(
+        quotes.0[0].id,
+        uuid::Uuid::parse_str("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11").unwrap()
+    );
+    Ok(())
+}
+
+#[sqlx::test(fixtures("quotes"))]
+async fn test_update_quotes(pool: PgPool) -> sqlx::Result<()> {
+    let res = update_quote(
+        extract::State(pool.clone()),
+        extract::Path(uuid::Uuid::parse_str("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11").unwrap()),
+        axum::Json(CreateQuote {
+            book: "book".to_string(),
+            quote: "quote".to_string(),
+        }),
+    )
+    .await;
+    assert_eq!(res, http::StatusCode::OK);
+    // verify that the quote was updated
+    let res = read_quotes(extract::State(pool)).await;
+    assert!(res.is_ok());
+    let quotes = res.unwrap();
+    assert_eq!(quotes.0.len(), 1);
+    assert_eq!(quotes.0[0].book, "book");
+    Ok(())
+}
+
+#[sqlx::test(fixtures("quotes"))]
+async fn test_delete_quote(pool: PgPool) -> sqlx::Result<()> {
+    let res = delete_quote(
+        extract::State(pool.clone()),
+        extract::Path(uuid::Uuid::parse_str("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11").unwrap()),
+    )
+    .await;
+    assert_eq!(res, http::StatusCode::OK);
+    // verify that the quote was deleted
+    let res = read_quotes(extract::State(pool)).await;
+    assert!(res.is_ok());
+    let quotes = res.unwrap();
+    assert_eq!(quotes.0.len(), 0);
+    Ok(())
+}
