@@ -13,3 +13,6 @@ tokio = {version="1.0", features=["full"]}
 sqlx = {version="0.7", features=["migrate", "uuid", "chrono", "runtime-tokio", "postgres", "tls-rustls" ]}
 uuid = {version="1.6.1", features=['v4', "serde"]}
 chrono = {version="0.4", features=['serde']}
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
+tower-http = { version = "0.5.0", features = ["trace"] }
