@@ -61,7 +61,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5.3.0
         with:
-          images: rust/axum_crud_app
+          images: hyperwastaken/axum_crud_app
       
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
